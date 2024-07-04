@@ -21,6 +21,9 @@ import java.lang.reflect.Proxy
 import java.util.*
 import kotlin.reflect.jvm.jvmErasure
 
+/**
+ * 是否存在主键
+ */
 internal fun EntityImplementation.hasPrimaryKeyValue(fromTable: Table<*>): Boolean {
     val pk = fromTable.singlePrimaryKey { "Table '$fromTable' has compound primary keys." }
     if (pk.binding == null) {
@@ -69,6 +72,9 @@ internal fun EntityImplementation.hasColumnValue(binding: ColumnBinding): Boolea
     }
 }
 
+/**
+ * 获取主键的值
+ */
 internal fun EntityImplementation.getPrimaryKeyValue(fromTable: Table<*>): Any? {
     val pk = fromTable.singlePrimaryKey { "Table '$fromTable' has compound primary keys." }
     if (pk.binding == null) {
@@ -80,10 +86,13 @@ internal fun EntityImplementation.getPrimaryKeyValue(fromTable: Table<*>): Any? 
 
 internal fun EntityImplementation.getColumnValue(binding: ColumnBinding): Any? {
     when (binding) {
+        // 引用绑定
         is ReferenceBinding -> {
             val child = this.getProperty(binding.onProperty) as Entity<*>?
+            // 代理模式获取主键的值
             return child?.implementation?.getPrimaryKeyValue(binding.referenceTable as Table<*>)
         }
+        // 嵌套绑定
         is NestedBinding -> {
             var curr: EntityImplementation? = this
             for ((i, prop) in binding.properties.withIndex()) {
@@ -103,14 +112,17 @@ internal fun EntityImplementation.setPrimaryKeyValue(
     forceSet: Boolean = false,
     useExtraBindings: Boolean = false
 ) {
+    // 复合主键
     val pk = fromTable.singlePrimaryKey { "Table '$fromTable' has compound primary keys." }
     if (pk.binding == null) {
+        // 主键未绑定实体字段
         error("Primary column $pk has no bindings to any entity field.")
     } else {
         setColumnValue(pk.binding, value, forceSet)
     }
 
     if (useExtraBindings) {
+        // 为多个字段进行绑定
         for (extraBinding in pk.extraBindings) {
             setColumnValue(extraBinding, value, forceSet)
         }
@@ -151,16 +163,18 @@ internal fun EntityImplementation.setColumnValue(binding: ColumnBinding, value: 
         }
     }
 }
-
+// 是否为主键
 internal fun EntityImplementation.isPrimaryKey(name: String): Boolean {
     for (pk in this.fromTable?.primaryKeys.orEmpty()) {
         val binding = pk.binding ?: continue
         when (binding) {
+            // 引用绑定
             is ReferenceBinding -> {
                 if (parent == null && binding.onProperty.name == name) {
                     return true
                 }
             }
+            // 嵌套绑定
             is NestedBinding -> {
                 val namesPath = LinkedList<Set<String>>()
                 namesPath.addFirst(setOf(name))

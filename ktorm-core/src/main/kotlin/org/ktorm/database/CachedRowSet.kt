@@ -231,14 +231,16 @@ public open class CachedRowSet(rs: ResultSet) : ResultSet {
         if (rs is CachedRowSet) {
             return rs._values
         } else {
+            // 遍历所有行
             return rs.asIterable().map { row ->
+               // 遍历所有列
                 Array(_metadata.columnCount) { index ->
                     val obj = if (_typeMap.isNullOrEmpty()) {
                         row.getObject(index + 1)
                     } else {
                         row.getObject(index + 1, _typeMap)
                     }
-
+                    // 特殊数据类型处理
                     when (obj) {
                         is Ref -> SerialRef(obj)
                         is Struct -> SerialStruct(obj, _typeMap)

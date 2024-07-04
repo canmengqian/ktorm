@@ -25,9 +25,11 @@ import java.sql.Types
  * Created by vince on Sep 03, 2019.
  */
 internal class CachedRowSetMetadata(metadata: ResultSetMetaData) : ResultSetMetaData {
+    // 覆写了列信息并对列信息进行缓存操作
+    // 缓存所有的列信息
     private val columns = Array(metadata.columnCount) { index ->
         val i = index + 1
-
+        // 获取列元数据信息
         ColumnInfo(
             autoIncrement = metadata.runCatching { isAutoIncrement(i) }.getOrDefault(false),
             caseSensitive = metadata.runCatching { isCaseSensitive(i) }.getOrDefault(false),
@@ -60,7 +62,7 @@ internal class CachedRowSetMetadata(metadata: ResultSetMetaData) : ResultSetMeta
 
         return columns[col - 1]
     }
-
+    // 列元数据POJO
     private data class ColumnInfo(
         val autoIncrement: Boolean,
         val caseSensitive: Boolean,

@@ -32,6 +32,7 @@ import javax.sql.DataSource
  * @property dataSource the data source used to obtained connections, typically comes from Spring's application context.
  */
 public class SpringManagedTransactionManager(public val dataSource: DataSource) : TransactionManager {
+    // 使用spring的代理对象获取JDBC连接
     private val proxy = dataSource as? TransactionAwareDataSourceProxy ?: TransactionAwareDataSourceProxy(dataSource)
 
     override val defaultIsolation: TransactionIsolation? = null

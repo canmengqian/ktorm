@@ -134,11 +134,13 @@ import kotlin.reflect.jvm.jvmErasure
 public interface Entity<E : Entity<E>> : Serializable {
 
     /**
+     * 实体类class
      * Return this entity's [KClass] instance, which must be an interface.
      */
     public val entityClass: KClass<E>
 
     /**
+     * 实体类所有属性
      * Return the immutable view of this entity's all properties.
      */
     public val properties: Map<String, Any?>
@@ -232,6 +234,7 @@ public interface Entity<E : Entity<E>> : Serializable {
     public companion object {
 
         /**
+         * 用于创建实体对象
          * Create an entity object. This function is used by Ktorm internal.
          */
         internal fun create(
@@ -276,6 +279,7 @@ public interface Entity<E : Entity<E>> : Serializable {
          */
         @Suppress("UNCHECKED_CAST")
         public operator fun invoke(): E {
+            // 重新invoke方法
             return create(referencedKotlinType.jvmErasure) as E
         }
 

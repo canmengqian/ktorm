@@ -46,6 +46,7 @@ import java.sql.Statement
  * @return the effected row count.
  */
 public fun <T : BaseTable<*>> Database.update(table: T, block: UpdateStatementBuilder.(T) -> Unit): Int {
+    // 构建update语句
     val builder = UpdateStatementBuilder().apply { block(table) }
     if (builder.assignments.isEmpty()) {
         throw IllegalArgumentException("There are no columns to update in the statement.")

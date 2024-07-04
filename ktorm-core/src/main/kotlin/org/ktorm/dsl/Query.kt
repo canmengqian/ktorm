@@ -75,6 +75,7 @@ public class Query(public val database: Database, public val expression: QueryEx
      * Useful when we want to ensure if the generated SQL is expected while debugging.
      */
     public val sql: String by lazy(LazyThreadSafetyMode.NONE) {
+        // 格式化SQL
         database.formatExpression(expression, beautifySql = true).first
     }
 
@@ -87,9 +88,11 @@ public class Query(public val database: Database, public val expression: QueryEx
      * overrides the indexed access operator. More details can be found in the documentation of [QueryRowSet].
      */
     public val rowSet: QueryRowSet by lazy(LazyThreadSafetyMode.NONE) {
+        // 委托database执行查询
         QueryRowSet(this, database.executeQuery(expression))
     }
 
+    // 委托方法
     /**
      * The total record count of this query ignoring the pagination params.
      */
@@ -104,19 +107,23 @@ public class Query(public val database: Database, public val expression: QueryEx
      * is provided to support pagination, we can calculate the page count through dividing it by our page size.
      */
     public val totalRecordsInAllPages: Int by lazy(LazyThreadSafetyMode.NONE) {
+        // 去除分页查询
         if (expression.offset == null && expression.limit == null) {
             rowSet.size()
         } else {
+            // 生成count表达式
             val countExpr = database.toCountExpression(expression)
             val rowSet = database.executeQuery(countExpr)
 
             if (rowSet.next()) {
+                // 获取总数
                 rowSet.getInt(1).also { total ->
                     if (database.logger.isDebugEnabled()) {
                         database.logger.debug("Total Records: $total")
                     }
                 }
             } else {
+                // 没有数据
                 val (sql, _) = database.formatExpression(countExpr, beautifySql = true)
                 throw IllegalStateException("No result return for sql: $sql")
             }
@@ -145,6 +152,7 @@ public class Query(public val database: Database, public val expression: QueryEx
 }
 
 /**
+ * 创建查询对象 默认查询所有字段
  * Create a query object, selecting the specific columns or expressions from this [QuerySource].
  *
  * Note that the specific columns can be empty, that means `select *` in SQL.
@@ -176,6 +184,7 @@ public fun QuerySource.select(vararg columns: ColumnDeclaring<*>): Query {
  */
 public fun QuerySource.selectDistinct(columns: Collection<ColumnDeclaring<*>>): Query {
     val declarations = columns.map { it.asDeclaringExpression() }
+    // 显式赋值
     return Query(database, SelectExpression(columns = declarations, from = expression, isDistinct = true))
 }
 
@@ -194,6 +203,7 @@ public fun QuerySource.selectDistinct(vararg columns: ColumnDeclaring<*>): Query
  * Wrap this expression as a [ColumnDeclaringExpression].
  */
 internal fun <T : Any> ColumnDeclaring<T>.asDeclaringExpression(): ColumnDeclaringExpression<T> {
+    // 列声明转列声明表达式
     return when (this) {
         is ColumnDeclaringExpression -> this
         is Column -> this.aliased(label)
@@ -207,7 +217,9 @@ internal fun <T : Any> ColumnDeclaring<T>.asDeclaringExpression(): ColumnDeclari
 public fun Query.where(condition: ColumnDeclaring<Boolean>): Query {
     return this.withExpression(
         when (expression) {
+            // 如果是select表达式, 则生成新的select表达式,加入where表达式
             is SelectExpression -> expression.copy(where = condition.asExpression())
+            // union报错
             is UnionExpression -> throw IllegalStateException("Where clause is not supported in a union expression.")
         }
     )
@@ -281,6 +293,7 @@ public fun Iterable<ColumnDeclaring<Boolean>>.combineConditions(ifEmpty: Boolean
  */
 public fun Query.groupBy(columns: Collection<ColumnDeclaring<*>>): Query {
     return this.withExpression(
+        // 追加group by
         when (expression) {
             is SelectExpression -> expression.copy(groupBy = columns.map { it.asExpression() })
             is UnionExpression -> throw IllegalStateException("Group by clause is not supported in a union expression.")

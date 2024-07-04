@@ -39,6 +39,9 @@ import java.util.ServiceLoader
 public interface SqlDialect {
 
     /**
+     * 创建表达式的访问器实例，使用指定的拦截器。
+     */
+    /**
      * Create a default visitor instance for this dialect using the specific [interceptor].
      *
      * Implementations might have their own sub-interface of [SqlExpressionVisitor] to support dialect-specific
@@ -52,6 +55,9 @@ public interface SqlDialect {
         return SqlExpressionVisitor::class.newVisitorInstance(interceptor)
     }
 
+    /**
+     * SqlFormatter 创建器
+     */
     /**
      * Create a [SqlFormatter] instance, formatting SQL expressions as strings with their execution arguments.
      *
@@ -115,10 +121,11 @@ public class DialectFeatureNotSupportedException(
  * Auto detect a dialect implementation.
  */
 public fun detectDialectImplementation(): SqlDialect {
+    // TODO 方言怎么加载的？
     val dialects = ServiceLoader.load(SqlDialect::class.java).toList()
     return when (dialects.size) {
-        0 -> object : SqlDialect { }
-        1 -> dialects[0]
+        0 -> object : SqlDialect { } // 没找到方言
+        1 -> dialects[0] // 加载到方言
         else -> error(
             "More than one dialect implementations found in the classpath, please choose one manually: $dialects"
         )

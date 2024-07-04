@@ -29,11 +29,13 @@ import java.sql.Connection
  */
 public interface TransactionManager {
 
+    // 默认事务隔离级别
     /**
      * The default transaction isolation, null for the default isolation level of the underlying datastore.
      */
     public val defaultIsolation: TransactionIsolation?
 
+    // 当前线程事务
     /**
      * The opened transaction of the current thread, null if there is no transaction opened.
      */

@@ -36,12 +36,16 @@ public fun ColumnDeclaring<*>.isNotNull(): UnaryExpression<Boolean> {
 }
 
 /**
+ * 减法运算符
  * Unary minus operator, translated to `-` in SQL.
  */
 public operator fun <T : Number> ColumnDeclaring<T>.unaryMinus(): UnaryExpression<T> {
     return UnaryExpression(UnaryExpressionType.UNARY_MINUS, asExpression(), sqlType)
 }
-
+/**
+ * 加法运算符
+ * Unary minus operator, translated to `-` in SQL.
+ */
 /**
  * Unary plus operator, translated to `+` in SQL.
  */
@@ -50,6 +54,7 @@ public operator fun <T : Number> ColumnDeclaring<T>.unaryPlus(): UnaryExpression
 }
 
 /**
+ * not 运算符
  * Negative operator, translated to the `not` keyword in SQL.
  */
 public operator fun ColumnDeclaring<Boolean>.not(): UnaryExpression<Boolean> {
@@ -59,19 +64,25 @@ public operator fun ColumnDeclaring<Boolean>.not(): UnaryExpression<Boolean> {
 // ---- Plus(+) ----
 
 /**
- * Plus operator, translated to `+` in SQL.
+ * 字段+字段
+ * Plus operator, translated to `+` in SQL. 二元加法 = 1+2
  */
 public infix operator fun <T : Number> ColumnDeclaring<T>.plus(expr: ColumnDeclaring<T>): BinaryExpression<T> {
     return BinaryExpression(BinaryExpressionType.PLUS, asExpression(), expr.asExpression(), sqlType)
 }
-
+/**
+ * 字段+数值
+ */
 /**
  * Plus operator, translated to `+` in SQL.
  */
 public infix operator fun <T : Number> ColumnDeclaring<T>.plus(value: T): BinaryExpression<T> {
+
     return this + wrapArgument(value)
 }
-
+/**
+ * 数值+字段
+ */
 /**
  * Plus operator, translated to `+` in SQL.
  */
@@ -79,7 +90,7 @@ public infix operator fun <T : Number> T.plus(expr: ColumnDeclaring<T>): BinaryE
     return expr.wrapArgument(this) + expr
 }
 
-// ------- Minus(-) -----------
+// ------- Minus(-) 二元减法同二元加法一致-----------
 
 /**
  * Minus operator, translated to `-` in SQL.
@@ -102,7 +113,7 @@ public infix operator fun <T : Number> T.minus(expr: ColumnDeclaring<T>): Binary
     return expr.wrapArgument(this) - expr
 }
 
-// -------- Times(*) -----------
+// -------- Times(*) 二元乘法同二元加法一致-----------
 
 /**
  * Multiply operator, translated to `*` in SQL.
@@ -125,7 +136,7 @@ public infix operator fun <T : Number> T.times(expr: ColumnDeclaring<T>): Binary
     return expr.wrapArgument(this) * expr
 }
 
-// -------- Div(/) ----------
+// -------- Div(/) 二元除法同二元加法一致----------
 
 /**
  * Divide operator, translated to `/` in SQL.

@@ -20,6 +20,7 @@ import org.ktorm.database.Database
 import org.ktorm.expression.*
 
 internal fun Database.toCountExpression(expr: QueryExpression): SelectExpression {
+    // 转换为QueryExpression
     val expression = dialect.createExpressionVisitor(OrderByRemover(this)).visit(expr) as QueryExpression
     val count = count().aliased(null)
 
@@ -37,12 +38,15 @@ internal fun Database.toCountExpression(expr: QueryExpression): SelectExpression
 }
 
 private fun SelectExpression.isSimpleSelect(): Boolean {
+    // 存在分组,不是简单查询
     if (groupBy.isNotEmpty()) {
         return false
     }
+    // 存在去除关键字
     if (isDistinct) {
         return false
     }
+    // 是否全是单纯的列名
     return columns.all { it.expression is ColumnExpression }
 }
 
@@ -50,13 +54,14 @@ private class OrderByRemover(val database: Database) : SqlExpressionVisitorInter
 
     override fun intercept(expr: SqlExpression, visitor: SqlExpressionVisitor): SqlExpression? {
         if (expr is SelectExpression) {
+            // 判断是否有无orderBy表达式
             if (expr.orderBy.any { database.hasArgument(it) }) {
                 return expr
             } else {
                 return expr.copy(orderBy = emptyList())
             }
         }
-
+        // 是否是union表达式
         if (expr is UnionExpression) {
             if (expr.orderBy.any { database.hasArgument(it) }) {
                 return expr

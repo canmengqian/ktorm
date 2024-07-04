@@ -33,6 +33,7 @@ import kotlin.contracts.contract
  */
 @OptIn(ExperimentalContracts::class)
 @Suppress("ConvertTryFinallyToUseCall")
+// 给任意类T扩展了use方法,然后将T类型作为参数传入[T类型必须实现了AutoCloseable接口],返回一个R类型,会自动关闭资源
 public inline fun <T : AutoCloseable?, R> T.use(block: (T) -> R): R {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
@@ -44,7 +45,7 @@ public inline fun <T : AutoCloseable?, R> T.use(block: (T) -> R): R {
         this?.close()
     }
 }
-
+// 给预编译语句PreparedStatement做的扩展函数,目的是给预编译语句设置参数
 /**
  * Set the arguments for this [PreparedStatement].
  *

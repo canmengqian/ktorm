@@ -33,12 +33,16 @@ import javax.sql.DataSource
  * @property connector the callback function used to obtain SQL connections.
  */
 public class JdbcTransactionManager(public val connector: () -> Connection) : TransactionManager {
+    // 线程事务
     private val threadLocal = ThreadLocal<Transaction>()
 
+    // 默认隔离级别
     override val defaultIsolation: TransactionIsolation? = null
 
+    // 获取当前线程对应的事务
     override val currentTransaction: Transaction? get() = threadLocal.get()
 
+    // 创建新事务
     override fun newTransaction(isolation: TransactionIsolation?): Transaction {
         if (currentTransaction != null) {
             throw IllegalStateException("Current thread is already in a transaction.")
@@ -47,10 +51,14 @@ public class JdbcTransactionManager(public val connector: () -> Connection) : Tr
         return JdbcTransaction(isolation).apply { threadLocal.set(this) }
     }
 
+    // 创建新连接
     override fun newConnection(): Connection {
         return connector.invoke()
     }
 
+    /**
+     * 继承了 Transaction
+     */
     private inner class JdbcTransaction(private val desiredIsolation: TransactionIsolation?) : Transaction {
         private var originIsolation = -1
         private var originAutoCommit = true
@@ -58,6 +66,7 @@ public class JdbcTransactionManager(public val connector: () -> Connection) : Tr
         private val connectionLazy = lazy(LazyThreadSafetyMode.NONE) {
             newConnection().apply {
                 try {
+                    // 设置隔离级别
                     if (desiredIsolation != null) {
                         originIsolation = transactionIsolation
                         if (originIsolation != desiredIsolation.level) {
@@ -76,9 +85,14 @@ public class JdbcTransactionManager(public val connector: () -> Connection) : Tr
             }
         }
 
+        // 获取连接
         override val connection: Connection by connectionLazy
 
+        /**
+         * 提交事务
+         */
         override fun commit() {
+            // 如果连接初始化成功，则提交事务
             if (connectionLazy.isInitialized()) {
                 connection.commit()
             }

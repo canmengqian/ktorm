@@ -100,6 +100,7 @@ import kotlin.contracts.contract
  */
 public class Database(
 
+    // 事务管理器
     /**
      * The transaction manager used to manage connections and transactions.
      */
@@ -115,6 +116,7 @@ public class Database(
      */
     public val logger: Logger = detectLoggerImplementation(),
 
+    // 异常转换器
     /**
      * Function used to translate SQL exceptions to rethrow them to users.
      */
@@ -125,6 +127,7 @@ public class Database(
      *
      * @since 3.1.0
      */
+    // TODO
     public val alwaysQuoteIdentifiers: Boolean = false,
 
     /**
@@ -134,6 +137,7 @@ public class Database(
      *
      * @since 3.1.0
      */
+    //生产的sql是否大写
     public val generateSqlInUpperCase: Boolean? = null
 ) {
     /**
@@ -244,6 +248,7 @@ public class Database(
     public val maxColumnNameLength: Int
 
     init {
+        // 初始化曹祖
         fun Result<String?>.orEmpty() = getOrNull().orEmpty()
         fun Result<Boolean>.orFalse() = getOrDefault(false)
 
@@ -290,6 +295,7 @@ public class Database(
         }
 
         try {
+            // 获取当前事务,从事务中获取链接对象
             val transaction = transactionManager.currentTransaction
             val connection = transaction?.connection ?: transactionManager.newConnection()
 
@@ -413,7 +419,9 @@ public class Database(
         contract {
             callsInPlace(func, InvocationKind.EXACTLY_ONCE)
         }
-
+        /**
+         * 表达式解析 成对应的sql和sql参数
+         */
         val (sql, args) = formatExpression(expression)
 
         if (logger.isDebugEnabled()) {
